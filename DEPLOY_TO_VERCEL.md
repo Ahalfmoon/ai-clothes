@@ -1,7 +1,22 @@
 # Vercel 部署完整指南
 
-## 已完成的改造
+## ✅ 已修复的部署问题
 
+### 最新修复（2026-05-24）
+✅ **移除飞书 CLI 依赖**
+- 删除了 `package.json` 中 `postinstall` 钩子的 `fullstack-cli` 命令
+- 删除了 `gen:db-schema` 脚本中的飞书依赖
+- 删除了 `actionPlugins` 配置块
+
+✅ **安装 Vercel 依赖**
+- 添加了 `@vercel/node` 包
+- 创建了 `api/index.ts` 作为 serverless 函数入口
+
+✅ **更新构建配置**
+- 简化了 `package.json` scripts
+- 修改了 `vercel.json` 配置以支持 NestJS
+
+### 之前完成的改造
 ✅ **已移除飞书依赖**
 - 卸载了所有 `@lark-apaas/*` 和 `@official-plugins/*` 包
 - 修改了 `app.module.ts`、`main.ts`
@@ -17,28 +32,7 @@
 
 ---
 
-## 本地测试步骤
-
-### 1. 启动后端（应已在运行）
-```bash
-# 后端已在后台运行
-# 访问: http://localhost:3000
-```
-
-### 2. 启动前端（新开终端）
-```bash
-npm run dev:client
-# 访问: http://localhost:5173
-```
-
-### 3. 测试功能
-- 上传两张图片
-- 点击"一键换装"
-- 查看 Mock 结果
-
----
-
-## 部署到 Vercel
+## 🚀 立即部署到 Vercel
 
 ### 准备工作
 
@@ -61,7 +55,7 @@ npm run dev:client
 #### 步骤 1: 提交代码到 GitHub
 ```bash
 git add .
-git commit -m "Remove Feishu dependencies, prepare for Vercel"
+git commit -m "Fix Vercel deployment: remove Feishu CLI dependencies"
 git push origin main
 ```
 
@@ -74,8 +68,9 @@ vercel
 - Set up and deploy? → **Y**
 - Which scope? → 选择你的账号
 - Link to existing project? → **N**
-- Project name? → **ai-outfit**
+- Project name? → **ai-clothes** (或自定义)
 - Directory? → **./**
+- Override settings? → **Y**
 
 #### 步骤 3: 配置环境变量
 
@@ -93,9 +88,10 @@ NODE_ENV=production
 可选（如果要使用真实 AI）：
 ```env
 TOGETHER_API_KEY=your_together_ai_key
+OPENAI_API_KEY=your_openai_key
 ```
 
-#### 步骤 4: 启用 Vercel Postgres
+#### 步骤 4: 启用 Vercel Postgres（可选）
 
 1. 进入项目 → **Storage**
 2. 点击 **Create Database**
@@ -127,19 +123,31 @@ CREATE TABLE IF NOT EXISTS history (
 CREATE INDEX IF NOT EXISTS idx_history_user_id ON history(user_id);
 ```
 
-#### 步骤 6: 更新代码使用 Vercel 服务
+#### 步骤 6: 验证部署
 
-部署后，需要更新以下文件：
+部署完成后访问：
+- **主页面**: `https://your-project.vercel.app`
+- **API 测试**: `https://your-project.vercel.app/api/ai/health`
 
-**1. 替换 Blob Service 为 Vercel Blob**
+测试 API：
+```bash
+curl https://your-project.vercel.app/api/ai/health
+# 应返回: {"status":"ok","service":"Together AI"}
+```
 
-创建 `vercel-blob.service.ts`:
+---
+
+## 🔧 部署后升级（可选）
+
+### 替换为 Vercel Blob Storage
+
+创建 `server/modules/upload/vercel-blob.service.ts`:
 ```typescript
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { put } from '@vercel/blob';
 
 @Injectable()
-export class BlobService {
+export class VercelBlobService {
   async uploadImage(file: Buffer, filename: string) {
     const blob = await put(filename, file, { access: 'public' });
     return { url: blob.url, key: blob.url };
@@ -151,19 +159,13 @@ export class BlobService {
 }
 ```
 
-**2. 更新 AI Service 为真实服务**
+### 接入真实 AI 服务
 
-使用 Together AI 或其他服务。
-
-#### 步骤 7: 重新部署
-
-```bash
-vercel --prod
-```
+使用 Together AI 或 OpenAI 替换 Mock 服务。
 
 ---
 
-## 费用说明
+## 💰 费用说明
 
 ### Vercel 免费额度
 - **Hobby 计划**: 免费
@@ -192,59 +194,44 @@ vercel --prod
 
 ---
 
-## 当前 Mock 版本功能
+## 🐛 故障排查
 
-### 本地可以测试：
-✅ 上传图片到本地
-✅ 显示上传进度
-✅ Mock AI 换装（返回目标图）
-✅ Mock 穿搭建议（固定文本）
-✅ 历史记录（需要数据库）
+### 问题 1: fullstack-cli 命令未找到
+**状态**: ✅ 已修复
+**解决**: 已移除所有飞书 CLI 依赖
 
-### 部署到 Vercel 后需要：
-❌ 使用 Vercel Blob Storage
-❌ 使用真实 AI 服务
-❌ 使用 Vercel Postgres
+### 问题 2: API 路由不工作
+**解决**: 检查 `api/index.ts` 文件存在且正确
+**解决**: 确认 `vercel.json` 配置正确
 
----
-
-## 快速验证部署
-
-部署完成后访问：
-- **主页面**: `https://ai-outfit.vercel.app`
-- **API 测试**: `https://ai-outfit.vercel.app/api/ai/health`
-
-测试 API：
-```bash
-curl https://ai-outfit.vercel.app/api/ai/health
-# 应返回: {"status":"ok","service":"Together AI"}
-```
+### 问题 3: 构建失败
+**解决**: 检查 `package.json` scripts 是否正确
+**解决**: 确认没有飞书相关的依赖引用
 
 ---
 
-## 故障排查
+## 📋 当前功能状态
 
-### 问题 1: 图片上传失败
-**原因**: 本地使用文件系统，Vercel 需要 Blob Storage
-**解决**: 更新 `blob.service.ts` 使用 `@vercel/blob`
+### ✅ 已实现（Mock）
+- 图片上传（本地存储）
+- AI 换装（返回目标图片）
+- 穿搭建议（固定文本）
+- 历史记录（数据库存储）
 
-### 问题 2: 数据库连接失败
-**原因**: 环境变量未配置
-**解决**: 确认在 Vercel 设置了 `POSTGRES_URL`
-
-### 问题 3: AI 换装失败
-**原因**: 当前使用 Mock 数据
-**解决**: 配置 `TOGETHER_API_KEY` 或其他 AI 服务
+### 🔜 待升级（真实服务）
+- Vercel Blob Storage（文件存储）
+- Together AI/OpenAI（AI 换装）
+- Together AI/OpenAI（穿搭建议）
 
 ---
 
-## 下一步
+## 🎯 下一步
 
 1. ✅ 本地测试 Mock 版本
-2. ✅ 部署到 Vercel
-3. ✅ 启用 Vercel Postgres
-4. ⏳ 替换为 Vercel Blob Storage
-5. ⏳ 接入真实 AI 服务
-6. ⏳ 测试完整功能
+2. ✅ 修复 Vercel 部署问题
+3. ⏳ 部署到 Vercel
+4. ⏳ 启用 Vercel Postgres
+5. ⏳ 替换为 Vercel Blob Storage
+6. ⏳ 接入真实 AI 服务
 
 需要帮助？查看 [Vercel 文档](https://vercel.com/docs)

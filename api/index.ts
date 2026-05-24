@@ -8,7 +8,7 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from '../server/app.module';
 import type { Request, Response } from 'express';
 
-let cachedApp: Express.Application | null = null;
+let cachedApp: any = null;
 
 async function bootstrap() {
   if (!cachedApp) {
@@ -37,8 +37,8 @@ async function bootstrap() {
  * Vercel serverless function handler
  */
 export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
+  req: any,
+  res: any
 ) {
   try {
     const app = await bootstrap();

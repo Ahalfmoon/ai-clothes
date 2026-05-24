@@ -1,24 +1,16 @@
 {
-  "name": "fullstack-nestjs-template",
-  "version": "2.2.3",
+  "name": "ai-clothes",
+  "version": "1.0.0",
   "private": true,
-  "flags": {
-    "supportBusinessUser": true,
-    "supportScrollReveal": true,
-    "supportTiptapAndStreamdown": true,
-    "customToaster": true
-  },
   "scripts": {
-    "dev": "./scripts/dev.sh",
-    "dev:server": "NODE_ENV=development nest start --watch",
-    "dev:client": "NODE_ENV=development vite --config vite.config.ts",
-    "gen:db-schema": "fullstack-cli gen-db-schema",
-    "gen:openapi": "echo 'UNSUPPORTED, SKIP'",
-    "build": "./scripts/build.sh",
+    "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "nest start --watch",
+    "dev:client": "vite --config vite.config.ts",
+    "build": "npm run build:prod",
     "build:prod": "npm run build:server && npm run build:client",
-    "build:server": "NODE_ENV=production nest build",
-    "build:client": "NODE_ENV=production vite build --config vite.config.ts",
-    "start": "NODE_ENV=production node main.js",
+    "build:server": "nest build",
+    "build:client": "vite build --config vite.config.ts",
+    "start": "node dist/server/main.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "jest --config test/e2e/jest.config.js",
@@ -27,11 +19,8 @@
     "type:check": "concurrently -n \"server,client\" -c \"blue,green\" \"npm run type:check:server\" \"npm run type:check:client\"",
     "type:check:client": "tsc --noEmit --project tsconfig.app.json",
     "type:check:server": "tsc --noEmit --project tsconfig.node.json",
-    "lint": "node ./scripts/lint.js",
-    "format": "prettier --write \"{server,client,test}/**/*.{js,ts,tsx,json,md}\"",
-    "postinstall": "fullstack-cli action-plugin init",
-    "prepare": "chmod +x .githooks/pre-commit 2>/dev/null; git config core.hooksPath .githooks 2>/dev/null || true",
-    "precommit": "node scripts/hooks/run-precommit.js"
+    "lint": "eslint . --quiet",
+    "format": "prettier --write \"{server,client,test}/**/*.{js,ts,tsx,json,md}\""
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1053.0",
@@ -123,6 +112,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@types/uuid": "^10.0.0",
+    "@vercel/node": "^5.8.4",
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "~2.0.1",
@@ -203,10 +193,6 @@
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
-  },
-  "actionPlugins": {
-    "@official-plugins/ai-image-to-image": "1.0.20",
-    "@official-plugins/ai-text-generate": "1.0.16"
   },
   "optionalDependencies": {
     "@rollup/rollup-win32-x64-msvc": "^4.60.4"
