@@ -3,34 +3,21 @@
  * This file exports a handler for Vercel to serve the NestJS application
  */
 
-import { NestFactory } from '@nestjs/core';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import { AppModule } from '../server/app.module';
+import { createApp } from '../server/main';
 import type { Request, Response } from 'express';
 
-let cachedApp: any = null;
+let cachedExpressApp: any = null;
 
-async function bootstrap() {
-  if (!cachedApp) {
-    const express = require('express');
-    const app = express();
+async function getExpressApp() {
+  if (!cachedExpressApp) {
+    const nestApp = await createApp();
 
-    // Basic middleware
-    app.use(require('cors')());
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
-
-    const nestApp = await NestFactory.create(
-      AppModule,
-      new ExpressAdapter(app)
-    );
-
-    await nestApp.init();
-
-    cachedApp = app;
+    // Get the underlying Express app
+    const httpAdapter = nestApp.getHttpAdapter();
+    cachedExpressApp = httpAdapter.getInstance();
   }
 
-  return cachedApp;
+  return cachedExpressApp;
 }
 
 /**
@@ -41,7 +28,7 @@ export default async function handler(
   res: any
 ) {
   try {
-    const app = await bootstrap();
+    const app = await getExpressApp();
 
     // Handle preflight requests
     if (req.method === 'OPTIONS') {

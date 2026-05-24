@@ -3,9 +3,6 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ErrorBoundary } from 'react-error-boundary';
 
-import { AppContainer } from '@lark-apaas/client-toolkit/components/AppContainer';
-import { ErrorRender } from '@lark-apaas/client-toolkit/components/ErrorRender';
-
 import RoutesComponent from './app.tsx';
 import './index.css';
 import { createPortal } from 'react-dom';
@@ -13,22 +10,30 @@ import { Toaster } from '@client/src/components/ui/sonner';
 
 const CLIENT_BASE_PATH = process.env.CLIENT_BASE_PATH || '/';
 
+const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => {
+  return (
+    <div style={{ padding: '20px', textAlign: 'center' }}>
+      <h1>出错了</h1>
+      <pre>{error.message}</pre>
+      <button onClick={resetErrorBoundary}>重试</button>
+    </div>
+  );
+};
+
 const MainApp = () => {
   return (
     <BrowserRouter basename={CLIENT_BASE_PATH}>
-      <AppContainer defaultTheme="light">
-        <ErrorBoundary
-          fallbackRender={({ error, resetErrorBoundary }) => (
-            <ErrorRender
-              error={error as Error}
-              resetErrorBoundary={resetErrorBoundary}
-            />
-          )}
-        >
-          <RoutesComponent />
-          {createPortal(<Toaster />, document.body)}
-        </ErrorBoundary>
-      </AppContainer>
+      <ErrorBoundary
+        fallbackRender={({ error, resetErrorBoundary }) => (
+          <ErrorFallback
+            error={error as Error}
+            resetErrorBoundary={resetErrorBoundary}
+          />
+        )}
+      >
+        <RoutesComponent />
+        {createPortal(<Toaster />, document.body)}
+      </ErrorBoundary>
     </BrowserRouter>
   );
 };

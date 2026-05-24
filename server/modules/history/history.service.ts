@@ -1,8 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
 import { history } from "@server/database/schema";
 import { eq, and, desc, count } from "drizzle-orm";
+import db from "@server/database";
 import type {
   HistoryRecord,
   CreateHistoryRequest,
@@ -11,24 +10,13 @@ import type {
 @Injectable()
 export class HistoryService {
   private readonly logger = new Logger(HistoryService.name);
-  private readonly db;
-
-  constructor() {
-    // 使用环境变量中的数据库 URL
-    const connectionString = process.env.DATABASE_URL ||
-      process.env.POSTGRES_URL ||
-      'postgresql://postgres:postgres@localhost:5432/ai_outfit';
-
-    const client = postgres(connectionString);
-    this.db = drizzle(client);
-  }
 
   async create(
     userId: string,
     dto: CreateHistoryRequest
   ): Promise<{ id: string }> {
     try {
-      const [result] = await this.db
+      const [result] = await db
         .insert(history)
         .values({
           userId: userId,
@@ -53,7 +41,7 @@ export class HistoryService {
     pageSize: number
   ): Promise<{ items: HistoryRecord[]; total: number }> {
     try {
-      const totalResult = await this.db
+      const totalResult = await db
         .select({ count: count() })
         .from(history)
         .where(eq(history.userId, userId));
@@ -64,7 +52,7 @@ export class HistoryService {
         return { items: [], total };
       }
 
-      const items = await this.db
+      const items = await db
         .select({
           id: history.id,
           originalPhotoUrl: history.originalPhotoUrl,
@@ -96,7 +84,7 @@ export class HistoryService {
 
   async delete(userId: string, id: string): Promise<{ success: boolean }> {
     try {
-      await this.db
+      await db
         .delete(history)
         .where(and(eq(history.id, id), eq(history.userId, userId)));
 

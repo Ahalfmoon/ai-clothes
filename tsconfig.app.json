@@ -35,6 +35,16 @@
     "node_modules",
     "dist",
     "public",
-    "client/src/api/gen"
+    "client/src/api/gen",
+    "client/src/components/business-ui/**",
+    "client/src/pages/HistoryPage/**",
+    "client/src/pages/NotFound/**",
+    "client/src/components/Layout.tsx",
+    "client/src/pages/HomePage/HomePage.mock.tsx",
+    "client/src/utils/outfit-plugins.mock.ts",
+    "**/*.mock.tsx",
+    "**/*.mock.ts",
+    "**/*.vercel.tsx",
+    "**/*.vercel.ts"
   ]
 }

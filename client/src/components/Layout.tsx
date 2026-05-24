@@ -1,27 +1,12 @@
-import { Outlet, NavLink, useLocation } from "react-router-dom";
-import { Shirt, Clock } from "lucide-react";
-import { useAppInfo } from "@lark-apaas/client-toolkit/hooks/useAppInfo";
-import { useCurrentUserProfile } from "@lark-apaas/client-toolkit/hooks/useCurrentUserProfile";
-import { getDataloom } from "@lark-apaas/client-toolkit/dataloom";
-import { logger } from "@lark-apaas/client-toolkit/logger";
+import { Outlet, NavLink } from "react-router-dom";
+import { Shirt, Clock, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const navItems = [
   { path: "/", label: "换装首页", icon: Shirt },
@@ -29,32 +14,8 @@ const navItems = [
 ];
 
 const Layout = () => {
-  const { appName } = useAppInfo();
-  const userInfo = useCurrentUserProfile();
-  const location = useLocation();
-  const [logoutOpen, setLogoutOpen] = useState(false);
-
-  const handleLogout = async () => {
-    const dataloom = await getDataloom();
-    const result = await dataloom.service.session.signOut();
-    if (result.error) {
-      logger.error("退出登录失败:", result.error.message);
-      return;
-    }
-    window.location.reload();
-  };
-
-  const handleLogin = async () => {
-    const dataloom = await getDataloom();
-    dataloom.service.session.redirectToLogin();
-  };
-
-  const isLogin = !!userInfo?.user_id;
-  const userName = isLogin
-    ? (userInfo?.name && typeof userInfo.name === "object"
-        ? (userInfo.name as { zh_cn?: string }).zh_cn
-        : (userInfo?.name as string)) || "用户"
-    : "游客";
+  const appName = "AI 换装";
+  const userName = "用户";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -69,7 +30,7 @@ const Layout = () => {
                   <Shirt className="size-4" />
                 </div>
                 <span className="font-semibold text-foreground text-sm">
-                  {appName || "AI 换装"}
+                  {appName}
                 </span>
               </NavLink>
               <nav className="flex items-center gap-1">
@@ -104,11 +65,8 @@ const Layout = () => {
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-full hover:bg-accent p-1 pr-3 transition-colors">
                   <Avatar className="size-8">
-                    {isLogin && userInfo?.avatar ? (
-                      <AvatarImage src={userInfo.avatar} />
-                    ) : null}
                     <AvatarFallback className="bg-muted text-muted-foreground text-xs">
-                      {isLogin ? userName.charAt(0) : "?"}
+                      {userName.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-sm text-foreground">
@@ -117,13 +75,7 @@ const Layout = () => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {isLogin ? (
-                  <DropdownMenuItem onClick={() => setLogoutOpen(true)}>
-                    退出登录
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem onClick={handleLogin}>登录</DropdownMenuItem>
-                )}
+                <DropdownMenuItem>退出登录</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -136,22 +88,6 @@ const Layout = () => {
           <Outlet />
         </div>
       </main>
-
-      {/* Logout Confirmation */}
-      <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>确认退出</AlertDialogTitle>
-            <AlertDialogDescription>
-              退出登录后需要重新登录才能使用换装功能。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogout}>确认退出</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

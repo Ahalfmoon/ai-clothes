@@ -29,7 +29,6 @@ import {
 import { Streamdown } from "@/components/ui/streamdown";
 import Image from "@/components/ui/image";
 import { getHistoryList, deleteHistory } from "@/api";
-import { logger } from "@lark-apaas/client-toolkit/logger";
 import { toast } from "sonner";
 import type { HistoryRecord } from "@shared/api.interface";
 
@@ -49,7 +48,6 @@ const HistoryPage = () => {
       setRecords(data.items);
       setTotal(data.total);
     } catch (err) {
-      logger.error("获取历史记录失败", err);
       toast.error("获取历史记录失败");
     } finally {
       setLoading(false);
@@ -68,7 +66,6 @@ const HistoryPage = () => {
       setDeleteTarget(null);
       fetchRecords();
     } catch (err) {
-      logger.error("删除记录失败", err);
       toast.error("删除失败");
     }
   };
