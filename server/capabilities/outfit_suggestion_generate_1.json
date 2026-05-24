@@ -1,0 +1,31 @@
+{
+  "id": "outfit_suggestion_generate_1",
+  "pluginKey": "@official-plugins/ai-text-generate",
+  "pluginVersion": "1.0.16",
+  "name": "穿搭建议生成",
+  "description": "根据用户需求生成实用穿搭建议，包含搭配技巧、适配场景、风格定位三个维度",
+  "icon": "",
+  "paramsSchema": {
+    "properties": {
+      "user_demand": {
+        "type": "string",
+        "description": "用户穿搭需求描述，如场合、偏好、季节等信息"
+      }
+    },
+    "required": [
+      "user_demand"
+    ],
+    "type": "object"
+  },
+  "formValue": {
+    "prompt": "你是一位专业的穿搭顾问，擅长根据用户需求提供实用的穿搭建议。\n\n用户需求：{{input.user_demand}}\n\n请从以下三个维度给出穿搭建议：\n1. 风格定位：明确整体穿搭风格特点，符合用户需求和场景\n2. 搭配技巧：给出具体可操作的搭配方法、颜色选择、单品组合建议\n3. 适配场景：说明该穿搭适合的具体场合、季节、人群等\n\n输出要求：\n- 语言简洁明了，实用性强，避免空泛描述\n- 每个维度用小标题区分，内容条理清晰\n- 总字数控制在300字以内",
+    "modelID": "87",
+    "modelParams": {
+      "maxTokens": 8192,
+      "temperature": 0.5
+    }
+  },
+  "createdAt": 1777801869423,
+  "updatedAt": 1777801869423,
+  "createdBy": 7626405171976457182
+}

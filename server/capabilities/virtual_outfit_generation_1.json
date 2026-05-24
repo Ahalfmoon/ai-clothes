@@ -1,0 +1,45 @@
+{
+  "id": "virtual_outfit_generation_1",
+  "pluginKey": "@official-plugins/ai-image-to-image",
+  "pluginVersion": "1.0.20",
+  "name": "虚拟换装生成",
+  "description": "基于用户自拍照和穿搭照，生成换装效果图，保持人物特征不变，仅替换服装并自然融合",
+  "icon": "",
+  "paramsSchema": {
+    "type": "object",
+    "properties": {
+      "personImage": {
+        "type": "array",
+        "format": "plugin-image-url",
+        "description": "用户自拍照",
+        "items": {
+          "type": "string"
+        }
+      },
+      "clothingImage": {
+        "description": "穿搭照",
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "format": "plugin-image-url"
+      }
+    },
+    "required": [
+      "personImage",
+      "clothingImage"
+    ]
+  },
+  "formValue": {
+    "prompt": "保持人物脸型、身材等所有特征不变，仅替换人物身上的服装为提供的穿搭图片中的服装，整体自然融合，无违和感，光线色调一致",
+    "ratio": "1:1",
+    "referenceImages": [
+      "{{input.personImage}}",
+      "{{input.clothingImage}}"
+    ],
+    "watermark": true
+  },
+  "createdAt": 1777801868628,
+  "updatedAt": 1777801868628,
+  "createdBy": 7626405171976457182
+}
