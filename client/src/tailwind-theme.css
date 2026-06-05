@@ -1,12 +1,4 @@
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
-
-  --opaque-button-border-intensity: -8;
-
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
-
   --background: hsl(350 20% 97%);
   --foreground: hsl(345 15% 15%);
   --card: hsl(0 0% 100%);
@@ -46,16 +38,11 @@
   --sidebar-border: hsl(350 15% 90%);
   --sidebar-ring: hsl(350 70% 55%);
 
-  --primary-border: hsl(from hsl(350 70% 55%) h s calc(l + var(--opaque-button-border-intensity)));
-  --secondary-border: hsl(from hsl(350 25% 95%) h s calc(l + var(--opaque-button-border-intensity)));
-  --destructive-border: hsl(from hsl(0 70% 50%) h s calc(l + var(--opaque-button-border-intensity)));
-  --accent-border: hsl(from hsl(350 25% 95%) h s calc(l + var(--opaque-button-border-intensity)));
-  --muted-border: hsl(from hsl(350 25% 95%) h s calc(l + var(--opaque-button-border-intensity)));
   --font-sans:
-    'LarkHackSafariFont', 'LarkEmojiFont', 'LarkChineseQuote', '-apple-system',
-    'BlinkMacSystemFont', 'Helvetica Neue', 'Tahoma', 'PingFang SC',
-    'Microsoft Yahei', 'Arial', 'Hiragino Sans GB', 'sans-serif',
-    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    '-apple-system', 'BlinkMacSystemFont', 'Helvetica Neue', 'Tahoma',
+    'PingFang SC', 'Microsoft Yahei', 'Arial', 'Hiragino Sans GB',
+    'sans-serif', 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
   --font-serif:
     'Geist', 'Geist Fallback', ui-serif, Georgia, Cambria, 'Times New Roman',
     Times, serif;
@@ -152,64 +139,5 @@
     content: attr(data-placeholder);
     color: var(--muted-foreground);
     pointer-events: none;
-  }
-
-  .no-default-hover-elevate {}
-  .no-default-active-elevate {}
-
-  .toggle-elevate::before,
-  .toggle-elevate-2::before {
-    content: "";
-    pointer-events: none;
-    position: absolute;
-    inset: 0px;
-    border-radius: inherit;
-    z-index: -1;
-  }
-
-  .toggle-elevate.toggle-elevated::before {
-    background-color: var(--elevate-2);
-  }
-
-  .border.toggle-elevate::before {
-    inset: -1px;
-  }
-
-  .hover-elevate:not(.no-default-hover-elevate),
-  .active-elevate:not(.no-default-active-elevate),
-  .hover-elevate-2:not(.no-default-hover-elevate),
-  .active-elevate-2:not(.no-default-active-elevate) {
-    position: relative;
-    z-index: 0;
-  }
-
-  .hover-elevate:not(.no-default-hover-elevate)::after,
-  .active-elevate:not(.no-default-active-elevate)::after,
-  .hover-elevate-2:not(.no-default-hover-elevate)::after,
-  .active-elevate-2:not(.no-default-active-elevate)::after {
-    content: "";
-    pointer-events: none;
-    position: absolute;
-    inset: 0px;
-    border-radius: inherit;
-    z-index: 999;
-  }
-
-  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
-  .active-elevate:active:not(.no-default-active-elevate)::after {
-    background-color: var(--elevate-1);
-  }
-
-  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
-  .active-elevate-2:active:not(.no-default-active-elevate)::after {
-    background-color: var(--elevate-2);
-  }
-
-  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
-  .border.active-elevate:not(.no-active-interaction-elevate)::after,
-  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
-  .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
-  .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
-    inset: -1px;
   }
 }

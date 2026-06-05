@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(curl -s -X POST http://localhost:3000/api/ai/tryon -H \"Content-Type: application/json\" -d '{\"personImageUrl\":\"https://example.com/person.jpg\",\"clothingImageUrl\":\"https://example.com/clothing.jpg\"}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/ai/tryon -H 'Content-Type: application/json' -d '{\"personImageUrl\":\"https://example.com/person.jpg\",\"clothingImageUrl\":\"https://example.com/clothing.jpg\"}')",
+      "Bash(echo \"test image content\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/upload/image -F 'file=@/tmp/test.txt;type=image/png')",
+      "Bash(node -e ' *)"
     ]
   }
 }

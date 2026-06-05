@@ -6,9 +6,10 @@ import { ErrorBoundary } from 'react-error-boundary';
 import RoutesComponent from './app.tsx';
 import './index.css';
 import { createPortal } from 'react-dom';
-import { Toaster } from '@client/src/components/ui/sonner';
+import { Toaster } from '@/components/ui/sonner';
 
-const CLIENT_BASE_PATH = process.env.CLIENT_BASE_PATH || '/';
+// Vite 使用 import.meta.env.BASE_URL，默认为 '/'
+const CLIENT_BASE_PATH = import.meta.env.BASE_URL || '/';
 
 const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => {
   return (

@@ -10,11 +10,11 @@ import {
   Loader2Icon,
   XIcon,
 } from 'lucide-react';
-import { useTheme } from 'next-themes';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 
 function Toaster({ className, style, icons, ...props }: ToasterProps) {
-  const { theme = 'system' } = useTheme();
+  // next-themes 的 ThemeProvider 在项目中暂未配置，默认使用 light 主题
+  const theme = 'light';
 
   return (
     <Sonner

@@ -36,7 +36,9 @@ export async function generateOutfitImage(
 
 export async function streamStyleSuggestion(
   userDemand: string,
-  onChunk: (text: string) => void
+  onChunk: (text: string) => void,
+  personImageUrl?: string,
+  clothingImageUrl?: string,
 ): Promise<string> {
   try {
     const response = await fetch(`${API_BASE}/ai/suggestion`, {
@@ -44,6 +46,8 @@ export async function streamStyleSuggestion(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         userDemand,
+        personImageUrl,
+        clothingImageUrl,
       }),
     });
 

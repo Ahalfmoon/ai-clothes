@@ -178,11 +178,13 @@ const HomePage = () => {
 
       let suggestionText = "";
       await streamStyleSuggestion(
-        "根据提供的用户形象和服装风格，生成穿搭建议，包含搭配技巧、适配场景、风格定位三个部分，语言简洁实用",
+        "根据提供的用户形象和服装风格，生成穿搭建议",
         (text) => {
           suggestionText = text;
           setStyleSuggestion(text);
-        }
+        },
+        personPhoto,
+        clothingPhoto,
       );
 
       await createHistory({

@@ -20,7 +20,8 @@
     "type:check:client": "tsc --noEmit --project tsconfig.app.json",
     "type:check:server": "tsc --noEmit --project tsconfig.node.json",
     "lint": "eslint . --quiet",
-    "format": "prettier --write \"{server,client,test}/**/*.{js,ts,tsx,json,md}\""
+    "format": "prettier --write \"{server,client,test}/**/*.{js,ts,tsx,json,md}\"",
+    "postinstall": "echo 'Build complete'"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1053.0",

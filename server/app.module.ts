@@ -10,9 +10,10 @@ import { AIModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
-    // 环境配置
+    // 环境配置 - 加载 .env 和 .env.local
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env.local', '.env'],
     }),
 
     // 业务模块

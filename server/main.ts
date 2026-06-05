@@ -24,14 +24,28 @@ async function createApp() {
   });
 
   // 配置静态文件服务 - 用于上传的图片
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads/',
-  });
+  // 开发模式: process.cwd() = 项目根目录, uploads 目录在根目录下
+  // 生产模式: __dirname/.. = dist 上级即项目根
+  app.useStaticAssets(
+    process.env.NODE_ENV === 'production'
+      ? join(__dirname, '..', 'uploads')
+      : join(process.cwd(), 'uploads'),
+    { prefix: '/uploads/' },
+  );
 
-  // 注册视图引擎, 渲染 client 目录下的 html 文件
-  app.setBaseViewsDir(join(process.cwd(), 'dist/client'));
-  app.setViewEngine('html');
-  app.engine('html', hbsExpressEngine);
+  // 仅在生产环境配置前端静态文件和视图引擎
+  const isProduction = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
+
+  if (isProduction) {
+    app.useStaticAssets(join(__dirname, '..', 'dist', 'client'), {
+      prefix: '/',
+    });
+
+    // 注册视图引擎, 渲染 client 目录下的 html 文件
+    app.setBaseViewsDir(join(__dirname, '..', 'dist', 'client'));
+    app.setViewEngine('html');
+    app.engine('html', hbsExpressEngine);
+  }
 
   cachedApp = app;
   return app;
@@ -39,6 +53,10 @@ async function createApp() {
 
 async function bootstrap() {
   const app = await createApp();
+
+  // 不设置全局前缀，让每个模块自己处理
+  // ViewController 处理前端路由
+  // 其他控制器在模块级别设置 /api 前缀
 
   const logger = new Logger('Bootstrap');
   const host = process.env.SERVER_HOST || 'localhost';

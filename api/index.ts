@@ -3,7 +3,7 @@
  * This file exports a handler for Vercel to serve the NestJS application
  */
 
-import { createApp } from '../server/main';
+import { createApp } from '../dist/server/main';
 import type { Request, Response } from 'express';
 
 let cachedExpressApp: any = null;

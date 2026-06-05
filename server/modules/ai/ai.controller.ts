@@ -7,10 +7,12 @@ interface GenerateTryonDto {
 }
 
 interface GenerateSuggestionDto {
-  userDemand: string;
+  userDemand?: string;
+  personImageUrl?: string;
+  clothingImageUrl?: string;
 }
 
-@Controller('ai')
+@Controller('api/ai')
 export class AIController {
   private readonly logger = new Logger(AIController.name);
 
@@ -46,7 +48,8 @@ export class AIController {
     // For now, returning non-streaming version
     try {
       const content = await this.togetherAIService.generateStyleSuggestion(
-        dto.userDemand
+        dto.personImageUrl,
+        dto.clothingImageUrl,
       );
 
       return {
@@ -68,6 +71,23 @@ export class AIController {
     return {
       status: isHealthy ? 'ok' : 'error',
       service: 'Together AI',
+    };
+  }
+
+  /**
+   * Debug: 检查环境变量是否被正确加载
+   */
+  @Get('debug')
+  async debug() {
+    return {
+      accessKey: process.env.VOLCENGINE_ACCESS_KEY
+        ? `已配置 (长度:${process.env.VOLCENGINE_ACCESS_KEY.length})`
+        : '未配置',
+      secretKey: process.env.VOLCENGINE_SECRET_KEY
+        ? `已配置 (长度:${process.env.VOLCENGINE_SECRET_KEY.length})`
+        : '未配置',
+      nodeEnv: process.env.NODE_ENV,
+      cwd: process.cwd(),
     };
   }
 }

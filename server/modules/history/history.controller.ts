@@ -10,7 +10,7 @@ import {
 import { HistoryService } from "./history.service";
 import type { CreateHistoryRequest } from "@shared/api.interface";
 
-@Controller("history")
+@Controller("api/history")
 export class HistoryController {
   constructor(private readonly historyService: HistoryService) {}
 

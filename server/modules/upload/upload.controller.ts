@@ -1,16 +1,21 @@
-import { Controller, Post, UseInterceptors, UploadedFile, BadRequestException, Logger } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, BadRequestException, Logger, Inject } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BlobService } from './blob.service';
+import { VercelBlobService } from './vercel-blob.service';
 
-@Controller('upload')
+@Controller('api/upload')
 export class UploadController {
   private readonly logger = new Logger(UploadController.name);
 
-  constructor(private readonly blobService: BlobService) {}
+  constructor(
+    private readonly blobService: BlobService,
+    @Inject('VercelBlobService') private readonly vercelBlobService: VercelBlobService,
+  ) {}
 
   /**
    * Upload image endpoint
    * Accepts multipart/form-data file upload
+   * Automatically uses Vercel Blob if configured, otherwise falls back to local storage
    */
   @Post('image')
   @UseInterceptors(FileInterceptor('file'))
@@ -34,11 +39,19 @@ export class UploadController {
 
       const filename = `outfit-${Date.now()}-${Math.random().toString(36).slice(2)}.${this.getExtension(file.mimetype)}`;
 
-      const result = await this.blobService.uploadImage(
-        file.buffer,
-        filename,
-        { contentType: file.mimetype }
-      );
+      // 自动选择存储后端：Vercel Blob 优先，本地存储备用
+      let result: { url: string; key: string };
+      if (this.vercelBlobService.isConfigured()) {
+        this.logger.log('Using Vercel Blob for upload');
+        result = await this.vercelBlobService.uploadImage(file.buffer, filename);
+      } else {
+        this.logger.log('Using local storage for upload');
+        result = await this.blobService.uploadImage(
+          file.buffer,
+          filename,
+          { contentType: file.mimetype }
+        );
+      }
 
       this.logger.log(`Image uploaded: ${result.url}`);
 
@@ -46,6 +59,7 @@ export class UploadController {
         success: true,
         url: result.url,
         filename: file.originalname,
+        storage: this.vercelBlobService.isConfigured() ? 'vercel-blob' : 'local',
       };
     } catch (error) {
       this.logger.error('Upload failed', error);
