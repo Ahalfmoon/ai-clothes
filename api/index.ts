@@ -1,36 +1,27 @@
 /**
  * Vercel Serverless Function Entry Point
- * This file exports a handler for Vercel to serve the NestJS application
+ * 使用 require() 而非 import，避免 esbuild 将 NestJS 整个打包导致失败
  */
 
-import { createApp } from '../dist/server/main';
-import type { Request, Response } from 'express';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-let cachedExpressApp: any = null;
+// 缓存 Express app 实例，避免冷启动时重复初始化
+let cachedApp: any = null;
 
-async function getExpressApp() {
-  if (!cachedExpressApp) {
-    const nestApp = await createApp();
+async function getApp() {
+  if (cachedApp) return cachedApp;
 
-    // Get the underlying Express app
-    const httpAdapter = nestApp.getHttpAdapter();
-    cachedExpressApp = httpAdapter.getInstance();
-  }
-
-  return cachedExpressApp;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { createApp } = require('../dist/server/main');
+  const nestApp = await createApp();
+  const httpAdapter = nestApp.getHttpAdapter();
+  cachedApp = httpAdapter.getInstance();
+  return cachedApp;
 }
 
-/**
- * Vercel serverless function handler
- */
-export default async function handler(
-  req: any,
-  res: any
-) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    const app = await getExpressApp();
-
-    // Handle preflight requests
+    // CORS 预检
     if (req.method === 'OPTIONS') {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -39,7 +30,8 @@ export default async function handler(
       return;
     }
 
-    app(req as Request, res as Response);
+    const app = await getApp();
+    app(req, res);
   } catch (error) {
     console.error('Serverless function error:', error);
     res.status(500).json({
