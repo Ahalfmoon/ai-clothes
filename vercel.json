@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build:server 2>&1 && npm run build:client 2>&1",
+  "buildCommand": "npm run build:prod",
   "outputDirectory": "dist/client",
-  "installCommand": "NPM_CONFIG_PRODUCTION=false npm install",
+  "installCommand": "npm install",
   "framework": null,
   "rewrites": [
     {
@@ -10,13 +10,13 @@
       "destination": "/api/index"
     },
     {
-      "source": "/((?!api).*)",
+      "source": "/((?!api|assets|images|files|.*\\.).*)",
       "destination": "/index.html"
     }
   ],
   "functions": {
     "api/index.ts": {
-      "memory": 512,
+      "memory": 1024,
       "maxDuration": 60,
       "includeFiles": "dist/**"
     }
@@ -26,8 +26,8 @@
       "source": "/api/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,PUT,DELETE,OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type,Authorization" }
       ]
     }
   ]
