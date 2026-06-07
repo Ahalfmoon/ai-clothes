@@ -21,54 +21,24 @@ async function getApp() {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // ---- 调试：打印收到的原始请求 ----
-  console.log(JSON.stringify({
-    event: 'request',
-    method: req.method,
-    url: req.url,
-    query: (req as any).query,
-  }));
-
-  // ---- 恢复原始 URL ----
-  // vercel.json rewrites: /api/upload/image?foo=bar → /api/index?__path=upload/image&foo=bar
-  // req.url 此时可能是 /api/index?__path=... 也可能是原始 /api/upload/image（取决于 Vercel runtime 版本）
-  // 目标：统一变成 /api/upload/image?foo=bar
-  const rawUrl = req.url || '/';
-  const queryIndex = rawUrl.indexOf('?');
-
-  if (queryIndex !== -1) {
-    // URL 里有 query string，尝试提取 __path
-    const qs = rawUrl.slice(queryIndex + 1);
-    const params = new URLSearchParams(qs);
-    const __path = params.get('__path');
-
-    if (__path) {
-      params.delete('__path');
-      const rest = params.toString();
-      req.url = '/api/' + __path + (rest ? '?' + rest : '');
+  // ============================================================
+  // 诊断端点：直接返回当前请求信息，完全绕过 NestJS
+  // 浏览器访问 /api/ping 测试 handler 是否被调用
+  // ============================================================
+  if (req.method === 'GET') {
+    const urlPath = (req.url || '/').split('?')[0];
+    if (urlPath === '/api/ping' || urlPath === '/api/index' && (req as any).query?.__path === 'ping') {
+      res.status(200).json({
+        ok: true,
+        handler: 'api/index.ts is WORKING',
+        rawUrl: req.url,
+        query: (req as any).query,
+        headers: req.headers['x-forwarded-host'] || 'none',
+        timestamp: Date.now(),
+      });
+      return;
     }
   }
-
-  // 如果 __path 不在 req.url 的 query 里，试试 Vercel 注入的 req.query
-  if (!req.url || req.url === '/api/index' || req.url.startsWith('/api/index?')) {
-    const vq = (req as any).query;
-    if (vq && vq.__path) {
-      const __path = String(vq.__path);
-      // 重建其他参数
-      const sp = new URLSearchParams();
-      for (const [k, v] of Object.entries(vq)) {
-        if (k !== '__path' && typeof v === 'string') sp.set(k, v);
-      }
-      const rest = sp.toString();
-      req.url = '/api/' + __path + (rest ? '?' + rest : '');
-    }
-  }
-
-  console.log(JSON.stringify({
-    event: 'restored',
-    method: req.method,
-    finalUrl: req.url,
-  }));
 
   // ---- CORS ----
   if (req.method === 'OPTIONS') {
@@ -78,6 +48,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(200).end();
     return;
   }
+
+  // ---- 恢复原始 URL ----
+  // Vercel rewrites: /api/history?page=1 → /api/index?__path=history&page=1
+  // 目标: req.url = /api/history?page=1
+  let path: string | null = null;
+  const extraParams = new URLSearchParams();
+
+  // 方式1: 从 req.url 的 query string 解析
+  const rawUrl = req.url || '/';
+  const qi = rawUrl.indexOf('?');
+  if (qi !== -1) {
+    const qp = new URLSearchParams(rawUrl.slice(qi + 1));
+    path = qp.get('__path') || null;
+    qp.forEach((v, k) => { if (k !== '__path') extraParams.set(k, v); });
+  }
+
+  // 方式2: 从 Vercel runtime 注入的 req.query
+  if (!path) {
+    const vq = (req as any).query;
+    if (vq?.__path) {
+      path = String(vq.__path);
+      for (const [k, v] of Object.entries(vq)) {
+        if (k !== '__path' && typeof v === 'string' && !extraParams.has(k)) {
+          extraParams.set(k, v);
+        }
+      }
+    }
+  }
+
+  if (path) {
+    const rest = extraParams.toString();
+    req.url = '/api/' + path + (rest ? '?' + rest : '');
+  }
+
+  // 记录最终状态到 Vercel Function Logs
+  console.log(JSON.stringify({ rawUrl, restoredUrl: req.url, path }));
 
   // ---- 交给 NestJS ----
   try {
