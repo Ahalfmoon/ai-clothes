@@ -1,17 +1,17 @@
 /**
  * Vercel Serverless Function Entry Point
- * 使用 require() 而非 import，避免 esbuild 将 NestJS 整个打包导致失败
+ * 所有 /api/* 请求通过 vercel.json rewrites 汇聚到此
+ * rewrite: /api/upload/image?foo=1 → /api/index?__path=upload/image&foo=1
+ * 此函数负责还原原始 req.url 后交给 NestJS/Express 处理
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// 缓存 Express app 实例，避免冷启动时重复初始化
 let cachedApp: any = null;
 
 async function getApp() {
   if (cachedApp) return cachedApp;
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { createApp } = require('../dist/server/main');
   const nestApp = await createApp();
   const httpAdapter = nestApp.getHttpAdapter();
@@ -19,14 +19,29 @@ async function getApp() {
   return cachedApp;
 }
 
+/** 从 rewrite query 中取出 __path，还原 req.url = /api/原路径?原参数 */
+function restoreOriginalUrl(req: VercelRequest): void {
+  try {
+    const raw = req.url || '/';
+    const qi = raw.indexOf('?');
+    if (qi === -1) return;
+
+    const qs = raw.slice(qi + 1);
+    const params = new URLSearchParams(qs);
+    const path = params.get('__path');
+    if (!path) return;
+
+    params.delete('__path');
+    const rest = params.toString();
+    req.url = '/api/' + path + (rest ? '?' + rest : '');
+  } catch {
+    // 解析失败不做任何改动
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    // Vercel rewrites 把 /api/xxx 重写为 /api/index?__path=xxx
-    // 从 query 参数恢复原始 URL，否则 NestJS 匹配不到路由
-    const forwardedPath = req.query.__path;
-    if (forwardedPath && typeof forwardedPath === 'string') {
-      req.url = '/api/' + forwardedPath;
-    }
+    restoreOriginalUrl(req);
 
     // CORS 预检
     if (req.method === 'OPTIONS') {
