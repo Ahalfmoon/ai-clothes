@@ -1,3 +1,15 @@
+// 屏蔽 url.parse 等第三方依赖触发的弃用警告（@vercel/postgres, postgres 包内部使用）
+process.removeAllListeners('warning');
+process.on('warning', (warning) => {
+  if (
+    warning.name === 'DeprecationWarning' &&
+    (warning.message.includes('url.parse') || warning.message.includes('url.format'))
+  ) {
+    return; // 吞掉 url.parse 警告
+  }
+  console.warn(warning.name, warning.message);
+});
+
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { join } from 'path';
