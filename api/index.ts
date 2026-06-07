@@ -21,6 +21,13 @@ async function getApp() {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
+    // Vercel rewrites 把 /api/xxx 重写为 /api/index?__path=xxx
+    // 从 query 参数恢复原始 URL，否则 NestJS 匹配不到路由
+    const forwardedPath = req.query.__path;
+    if (forwardedPath && typeof forwardedPath === 'string') {
+      req.url = '/api/' + forwardedPath;
+    }
+
     // CORS 预检
     if (req.method === 'OPTIONS') {
       res.setHeader('Access-Control-Allow-Origin', '*');
