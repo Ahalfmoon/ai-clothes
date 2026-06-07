@@ -1,64 +1,90 @@
 /**
- * Vercel Serverless Function Entry Point
- * 所有 /api/* 请求通过 vercel.json rewrites 汇聚到此
- * rewrite: /api/upload/image?foo=1 → /api/index?__path=upload/image&foo=1
- * 此函数负责还原原始 req.url 后交给 NestJS/Express 处理
+ * Vercel Serverless Function — 所有 /api/* 请求入口
+ *
+ * 请求链路：
+ *   浏览器 fetch('/api/upload/image')
+ *     → Vercel rewrites → /api/index?__path=upload/image
+ *     → api/index.ts 恢复 req.url 为 /api/upload/image
+ *     → NestJS/Express 路由匹配 → POST /api/upload/image ✅
  */
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 let cachedApp: any = null;
 
 async function getApp() {
   if (cachedApp) return cachedApp;
-
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { createApp } = require('../dist/server/main');
   const nestApp = await createApp();
-  const httpAdapter = nestApp.getHttpAdapter();
-  cachedApp = httpAdapter.getInstance();
+  cachedApp = nestApp.getHttpAdapter().getInstance();
   return cachedApp;
 }
 
-/** 从 rewrite query 中取出 __path，还原 req.url = /api/原路径?原参数 */
-function restoreOriginalUrl(req: VercelRequest): void {
-  try {
-    const raw = req.url || '/';
-    const qi = raw.indexOf('?');
-    if (qi === -1) return;
-
-    const qs = raw.slice(qi + 1);
-    const params = new URLSearchParams(qs);
-    const path = params.get('__path');
-    if (!path) return;
-
-    params.delete('__path');
-    const rest = params.toString();
-    req.url = '/api/' + path + (rest ? '?' + rest : '');
-  } catch {
-    // 解析失败不做任何改动
-  }
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  try {
-    restoreOriginalUrl(req);
+  // ---- 调试：打印收到的原始请求 ----
+  console.log(JSON.stringify({
+    event: 'request',
+    method: req.method,
+    url: req.url,
+    query: (req as any).query,
+  }));
 
-    // CORS 预检
-    if (req.method === 'OPTIONS') {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      res.status(200).end();
-      return;
+  // ---- 恢复原始 URL ----
+  // vercel.json rewrites: /api/upload/image?foo=bar → /api/index?__path=upload/image&foo=bar
+  // req.url 此时可能是 /api/index?__path=... 也可能是原始 /api/upload/image（取决于 Vercel runtime 版本）
+  // 目标：统一变成 /api/upload/image?foo=bar
+  const rawUrl = req.url || '/';
+  const queryIndex = rawUrl.indexOf('?');
+
+  if (queryIndex !== -1) {
+    // URL 里有 query string，尝试提取 __path
+    const qs = rawUrl.slice(queryIndex + 1);
+    const params = new URLSearchParams(qs);
+    const __path = params.get('__path');
+
+    if (__path) {
+      params.delete('__path');
+      const rest = params.toString();
+      req.url = '/api/' + __path + (rest ? '?' + rest : '');
     }
+  }
 
+  // 如果 __path 不在 req.url 的 query 里，试试 Vercel 注入的 req.query
+  if (!req.url || req.url === '/api/index' || req.url.startsWith('/api/index?')) {
+    const vq = (req as any).query;
+    if (vq && vq.__path) {
+      const __path = String(vq.__path);
+      // 重建其他参数
+      const sp = new URLSearchParams();
+      for (const [k, v] of Object.entries(vq)) {
+        if (k !== '__path' && typeof v === 'string') sp.set(k, v);
+      }
+      const rest = sp.toString();
+      req.url = '/api/' + __path + (rest ? '?' + rest : '');
+    }
+  }
+
+  console.log(JSON.stringify({
+    event: 'restored',
+    method: req.method,
+    finalUrl: req.url,
+  }));
+
+  // ---- CORS ----
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(200).end();
+    return;
+  }
+
+  // ---- 交给 NestJS ----
+  try {
     const app = await getApp();
     app(req, res);
   } catch (error) {
-    console.error('Serverless function error:', error);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
+    console.error('[api/index] error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 }
