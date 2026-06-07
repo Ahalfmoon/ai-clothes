@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { Shirt, Clock, User } from "lucide-react";
+import { Shirt, Clock, User, Sparkles } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,8 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const navItems = [
-  { path: "/", label: "换装首页", icon: Shirt },
+  { path: "/", label: "首页", icon: Shirt },
+  { path: "/tryon", label: "AI 换装", icon: Sparkles },
   { path: "/history", label: "历史记录", icon: Clock },
 ];
 

@@ -9,7 +9,10 @@
       "Bash(node -e ' *)",
       "Bash(git commit -m 'fix vercel build: add missing service files and database index *)",
       "Bash(git commit -m 'fix vercel: read-only filesystem crash in upload and history stores *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(curl -s http://localhost:3000/api/ai/health)",
+      "Bash(curl -s http://localhost:5173 -o /dev/null -w \"Frontend: %{http_code}\")",
+      "Bash(curl -s http://localhost:5173/api/ai/health)"
     ]
   }
 }
