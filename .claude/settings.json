@@ -6,7 +6,10 @@
       "Bash(curl -s -X POST http://localhost:3000/api/ai/tryon -H 'Content-Type: application/json' -d '{\"personImageUrl\":\"https://example.com/person.jpg\",\"clothingImageUrl\":\"https://example.com/clothing.jpg\"}')",
       "Bash(echo \"test image content\")",
       "Bash(curl -s -X POST http://localhost:3000/api/upload/image -F 'file=@/tmp/test.txt;type=image/png')",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(git commit -m 'fix vercel build: add missing service files and database index *)",
+      "Bash(git commit -m 'fix vercel: read-only filesystem crash in upload and history stores *)",
+      "Bash(git push *)"
     ]
   }
 }
