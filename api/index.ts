@@ -79,7 +79,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (path) {
     const rest = extraParams.toString();
-    req.url = '/api/' + path + (rest ? '?' + rest : '');
+    const newUrl = '/api/' + path + (rest ? '?' + rest : '');
+    // 必须用 Object.defineProperty 强制覆盖 —— Vercel runtime 的 req.url 可能被 freeze/只读
+    try {
+      Object.defineProperty(req, 'url', { value: newUrl, writable: true, configurable: true });
+    } catch {
+      req.url = newUrl;
+    }
   }
 
   // 记录最终状态到 Vercel Function Logs
